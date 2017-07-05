@@ -1,0 +1,17 @@
+Model ../Model/sponza/sponza.obj
+SceneScale 1.0
+CameraPos 0.6 -0.25 0.0
+CameraUpVector 0.0 0.0 0.0
+CameraLookat 0.08 -0.25 0.0007
+Fstop 10
+AllinFocus 0
+FocalLength 28.0
+SensorWidth 48.0
+SensorHeight 36.0
+ResWidth 1024
+SPP 16
+TestLight 1
+TestLightPos 0.0 0.7 -0.3
+TestLightEmission 2.0 2.0 2.0
+PathDepth 1
+NEE_Enable 1
