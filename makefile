@@ -41,7 +41,16 @@ DEPS = $(patsubst %,$(INCLUDE_DIR)/%,$(_DEPS))
 _DEPS = light.h
 DEPS = $(patsubst %,$(INCLUDE_DIR)/%,$(_DEPS))
 
-_OBJ = main.o imgPPM.o glm.o core.o utility.o bvh.o configure.o montecarlo.o path.o camera.o sampler.o light.o
+_DEPS = radiometry.h
+DEPS = $(patsubst %,$(INCLUDE_DIR)/%,$(_DEPS))
+
+_DEPS = microfacet.h
+DEPS = $(patsubst %,$(INCLUDE_DIR)/%,$(_DEPS))
+
+_DEPS = direct.h
+DEPS = $(patsubst %,$(INCLUDE_DIR)/%,$(_DEPS))
+
+_OBJ = main.o imgPPM.o glm.o core.o utility.o bvh.o configure.o montecarlo.o path.o camera.o sampler.o light.o radiometry.o microfacet.o direct.o
 OBJ = $(patsubst %,$(OBJECT_DIR)/%,$(_OBJ))
 
 $(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(DEPS)

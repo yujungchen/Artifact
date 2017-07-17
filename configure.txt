@@ -4,14 +4,14 @@ CameraPos 0.6 -0.25 0.0
 CameraUpVector 0.0 0.0 0.0
 CameraLookat 0.08 -0.25 0.0007
 Fstop 10
-AllinFocus 0
+AllinFocus 1
 FocalLength 28.0
 SensorWidth 48.0
 SensorHeight 36.0
-ResWidth 1024
-SPP 16
+ResWidth 512
+SPP 32
 TestLight 1
-TestLightPos 0.0 0.7 -0.3
-TestLightEmission 2.0 2.0 2.0
-PathDepth 1
+TestLightPos 0.2 1.1 0.0
+TestLightEmission 8.0 8.0 8.0
+PathDepth 3
 NEE_Enable 1

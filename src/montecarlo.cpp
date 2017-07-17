@@ -7,7 +7,7 @@
 MonteCarlo::MonteCarlo(GLMmodel *_model, BVHAccel *_bvh, std::vector<Primitive> &_PrimList, 
 					   PointLight *_l, AreaLight *_al,
 					   Camera *_camera,
-					   int _Width, int _Height, float _AspectRatio, int _PathSample, float _FocusDist,
+					   int _Width, int _Height, float _AspectRatio, int _PathSample,
 					   int _PathDepth, bool _NEE_Enable) {
 	m_model = _model;
 	m_bvh = _bvh;
@@ -19,7 +19,6 @@ MonteCarlo::MonteCarlo(GLMmodel *_model, BVHAccel *_bvh, std::vector<Primitive> 
 	m_PrimList = _PrimList;
 	m_AspectRatio = _AspectRatio;
 	m_PathSample = _PathSample;
-	m_FocusDist = _FocusDist;
 	m_PathDepth = _PathDepth;
 	m_NEE_Enable = _NEE_Enable;
 
@@ -40,6 +39,9 @@ MonteCarlo::MonteCarlo(GLMmodel *_model, BVHAccel *_bvh, std::vector<Primitive> 
 		m_DirectSampleNum = 64;
 	else
 		m_DirectSampleNum = 64;
+
+
+	m_Direct = new DirectIllumination(_model, _bvh, _PrimList, _l, _al, _camera, _Width, _Height, m_DirectSampleNum);
 	
 }
 
@@ -49,6 +51,9 @@ MonteCarlo::~MonteCarlo(){
 
 void MonteCarlo::Render(){
 	printf("Rendering...\n");
+
+	// Direct Illumination
+	m_Direct->Render(m_DirectImg, m_DirectSampleNum);
 
 	// Progress Illustration
 	unsigned int TotalTask = m_PathSample * m_Width * m_Height;
@@ -62,9 +67,11 @@ void MonteCarlo::Render(){
 
 	PathIntegrator *Path = new PathIntegrator(m_model, m_bvh, m_PrimList, m_l, m_al, m_camera, m_NEE_Enable);
 
-
 	for(int SampleNum = 0 ; SampleNum < m_PathSample ; SampleNum++){		
 		for(int h = m_Height - 1; h >= 0 ; h--){
+#ifdef OMP			
+			#pragma omp parallel for
+#endif
 			for(int w = 0; w < m_Width ; w++){
 
 				// Progress Illustration

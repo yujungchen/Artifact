@@ -79,7 +79,7 @@ int main(int argc, char **argv){
 				  m_TestLight, m_TestLightPos, m_TestLightEmission, 
 				  m_PathDepth, m_NEE_Enable);
 
-	float m_FocusDist = m_CameraLookat.z;	
+
 
 	if(isConfiguration){
 		cout<<"Loading\t"<<m_Model<<endl;
@@ -103,7 +103,7 @@ int main(int argc, char **argv){
 		// Setting Frame
 		m_ResWidth = atoi(argv[2]);
 		m_SPP = atoi(argv[3]);
-		m_FocusDist = atof(argv[4]);
+		//m_FocusDist = atof(argv[4]);
 		m_AspectRatio = 1.f;
 		m_ResHeight = m_ResWidth * m_AspectRatio;
 		m_SceneScale = 10.0f;
@@ -140,7 +140,7 @@ int main(int argc, char **argv){
 							 m_AspectRatio, m_ResWidth, m_ResHeight, m_FovV, m_FovH, 
 							 m_AllinFocus);
 	
-	MonteCarlo *Renderer = new MonteCarlo(model, bvh, triList, l, al, cam, m_ResWidth, m_ResHeight, m_AspectRatio, m_SPP, m_FocusDist, m_PathDepth, m_NEE_Enable);
+	MonteCarlo *Renderer = new MonteCarlo(model, bvh, triList, l, al, cam, m_ResWidth, m_ResHeight, m_AspectRatio, m_SPP, m_PathDepth, m_NEE_Enable);
 	
 	Renderer->Render();
 	

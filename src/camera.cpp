@@ -4,7 +4,7 @@
 
 
 Camera::Camera(glm::vec3 _CameraPos, glm::vec3 _CameraLookat, 
-		   float _Fstop, float _FocalLength, float _Aptertrue, float _SensorWidth, float _SensorHeight,
+		   float _Fstop, float _FocalLength, float _Apertrue, float _SensorWidth, float _SensorHeight,
 		   float _AspectRatio, int _ResWidth, int _ResHeight, float _FovV, float _FovH, 
 		   bool _AllinFocus){
 
@@ -13,7 +13,7 @@ Camera::Camera(glm::vec3 _CameraPos, glm::vec3 _CameraLookat,
 
 	m_Fstop = _Fstop;
 	m_FocalLength = _FocalLength;
-	m_Aperture = _Aptertrue;
+	m_Aperture = _Apertrue;
 	m_SensorWidth = _SensorWidth;
 	m_SensorHeight = _SensorHeight;
 	m_AspectRatio = _AspectRatio;

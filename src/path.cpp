@@ -1,4 +1,5 @@
 #include "path.h"
+#include "radiometry.h"
 #define EPSILON 0.0001f
 
 PathIntegrator::PathIntegrator(GLMmodel *_model, BVHAccel *_bvh, std::vector<Primitive> &_PrimList, 
@@ -13,58 +14,28 @@ PathIntegrator::PathIntegrator(GLMmodel *_model, BVHAccel *_bvh, std::vector<Pri
 	m_NEE_Enable = _NEE_Enable;
 	//m_UseAreaLight = _UseAreaLight;
 
-	//m_Dipole = _Dipole;
 }
 
 PathIntegrator::~PathIntegrator(){
 
 }
-/*
+
 glm::vec3 PathIntegrator::NEE(glm::vec3 &Pos, glm::vec3 &PrevPos, glm::vec3 &N, glm::vec3 &Kd, glm::vec3 &Ks, float Ns, float Eta,
-	MicroFacetType &MicroFacetModel, DistributionType &Distribution, float &Roughness){
+	MicroFacetType &MicroFacetModel, DistributionType &Distribution, float &Roughness,
+	glm::vec3 l_Pos, glm::vec3 l_N, glm::vec3 l_emission){
 
 	glm::vec3 NEERad = glm::vec3(0.0f);
 	
 	if(Eta > 0.0)
 		return NEERad;
 
-	// Sample the light source
-	glm::vec3 l_Pos = glm::vec3(0.0f);
-	glm::vec3 l_N = glm::vec3(0.0f);
-	glm::vec3 l_emission = glm::vec3(0.0f);
-
-	if(m_UseAreaLight){
-		l_emission = m_al->sampleL(l_Pos, l_N);
-	}
-	else{
-		l_Pos = m_l->getlpos();
-		l_N = glm::normalize(Pos - l_Pos);
-		l_emission = m_l->sampleL();
-	}
-
-	glm::vec3 dir2Light = l_Pos - Pos;
-	dir2Light = glm::normalize(dir2Light);
-
-	// Backface of the light source
-	if(glm::dot(l_N, dir2Light) >= 0.0f)
-		return NEERad;
-
-	Vector shaod_dir = Vector(dir2Light.x, dir2Light.y, dir2Light.z);
-	Point hitP = Point(Pos.x, Pos.y, Pos.z);
-	Ray ShadowRay(hitP, shaod_dir, EPSILON, glm::length(l_Pos - Pos) - 0.0001f);
-	
-	if(m_bvh->IntersectP(ShadowRay))
-		return NEERad;
-
 	glm::vec3 MicroNormal = glm::vec3(0.0f);
 	glm::vec3 BRDF = EvalBRDF(PrevPos, Pos, l_Pos, N, Kd, Ks, Ns, MicroFacetModel, Distribution, Roughness, MicroNormal, false);
 	NEERad = BRDF * ComputeG(Pos, l_Pos, N, l_N) * l_emission;
 
-	//NEERad = EvalPhongBRDF(PrevPos, Pos, l_Pos, N, Kd, Ks, Ns) * ComputeG(Pos, l_Pos, N, l_N) * l_emission;
-	
 	return NEERad;
 }
-*/
+
 glm::vec3 PathIntegrator::ComputeRadiance(int sample_x, int sample_y, int PathDepth){
 	
 	glm::vec3 Rad = glm::vec3(0.0f);
@@ -98,7 +69,7 @@ glm::vec3 PathIntegrator::ComputeRadiance(int sample_x, int sample_y, int PathDe
 
 	glm::vec3 VtxThroughput = glm::vec3(1.0f, 1.0f, 1.0f);
 
-	for(int Depth = 0 ; Depth < 1 ; Depth++){
+	for(int Depth = 0 ; Depth < PathDepth ; Depth++){
 
 		Pos = glm::vec3(0.0);
 		N = glm::vec3(0.0);
@@ -140,8 +111,66 @@ glm::vec3 PathIntegrator::ComputeRadiance(int sample_x, int sample_y, int PathDe
 			MatName = m_bvh->GetMatName();
 		}
 
-		Rad = Kd;
+		// Sample the light source
+		glm::vec3 l_Pos = glm::vec3(0.0f);
+		glm::vec3 l_N = glm::vec3(0.0f);
+		glm::vec3 l_emission = glm::vec3(0.0f);
+		if(Depth > 0) {
+			if(m_NEE_Enable) {
+				glm::vec3 Contribution = glm::vec3(0.0f);
 
+					// Sample light source
+					if(m_UseAreaLight) {
+						l_emission = m_al->sampleL(l_Pos, l_N);
+					}
+					else {
+						l_Pos = m_l->getlpos();
+						l_N = glm::normalize(Pos - l_Pos);
+						l_emission = m_l->sampleL();
+					}
+					glm::vec3 dir2Light = l_Pos - Pos;
+					dir2Light = glm::normalize(dir2Light);
+					// Sample light source
+
+					// Backface of the light source
+					if(glm::dot(l_N, dir2Light) >= 0.0f) {
+						Contribution = glm::vec3(0.0f);
+					}
+					// Add contribution
+					else {
+
+						Vector shaod_dir = Vector(dir2Light.x, dir2Light.y, dir2Light.z);
+						Point hitP = Point(Pos.x, Pos.y, Pos.z);
+						Ray ShadowRay(hitP, shaod_dir, EPSILON, glm::length(l_Pos - Pos) - 0.0001f);
+				
+						if(m_bvh->IntersectP(ShadowRay)) {
+							Contribution = glm::vec3(0.0f);
+						}
+						else {
+							// Next event estimation
+							Contribution = NEE(Pos, PrevPos, N, Kd, Ks, Ns, Eta, MicroFacetModel, Distribution, Roughness, l_Pos, l_N, l_emission);
+						}
+					}
+					Rad = Rad + Throughput * Contribution;
+			}
+		}
+
+		// Ray sampling and compute throughtput
+		if(!isVol) {
+			// Keep sampling the ray
+			SampleDir = LocalDirSampling(PrevPos, Pos, N, Kd, Ks, Ns, Eta, Current_Pdf_W_proj, VtxThroughput, MicroFacetModel);
+			Throughput = Throughput * VtxThroughput;
+		}
+		else {
+			// Keep sampling the ray
+			SampleDir = DiffuseDirSampling(PrevPos, Pos, N, Kd);
+			Throughput = Throughput * VtxThroughput;	
+		}
+		// Ray sampling and compute throughtput
+		Point P = Point(Pos.x, Pos.y, Pos.z);
+		Vector Dir = Vector(SampleDir.x, SampleDir.y, SampleDir.z);
+		RaySeg = Ray(P, Dir, EPSILON);
+		
 		PrevPos = Pos;
 		PrevN = N;
 		Prev_Pdf_W_proj = Current_Pdf_W_proj;
